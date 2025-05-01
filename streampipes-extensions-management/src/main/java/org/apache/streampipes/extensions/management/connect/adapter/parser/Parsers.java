@@ -31,8 +31,7 @@ public class Parsers {
         new CsvParser(),
         new XmlParser(),
         new ImageParser(),
-        new AvroParser(),
-        new ProtobufParser()
+        new AvroParser()
     );
   }
 }
