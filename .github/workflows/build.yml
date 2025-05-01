@@ -48,7 +48,7 @@ jobs:
       - name: Set env variables for Docker builds
         run: |
           echo "MVN_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
-
+          echo "DOCKERHUB_APACHE_REPO=apachestreampipes" >> $GITHUB_ENV
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -67,7 +67,7 @@ jobs:
           context: ./streampipes-service-core
           platforms: linux/amd64,linux/arm64/v8,linux/arm/v7
           push: true
-          tags: ${{ env.DOCKERHUB_APACHE_REPO }}/backend:${{ env.MVN_VERSION }}
+          tags: ${{ secrets.DOCKERHUB_APACHE_REPO }}/backend:${{ env.MVN_VERSION }}
 
       - name: Build and Push Docker Core Minimal Image
         uses: docker/build-push-action@v6
@@ -75,7 +75,7 @@ jobs:
           context: ./streampipes-service-core-minimal
           platforms: linux/amd64,linux/arm64/v8,linux/arm/v7
           push: true
-          tags: ${{ env.DOCKERHUB_APACHE_REPO }}/backend-minimal:${{ env.MVN_VERSION }}
+          tags: ${{ secrets.DOCKERHUB_APACHE_REPO }}/backend-minimal:${{ env.MVN_VERSION }}
 
       - name: Build UI
         working-directory: ./ui
@@ -89,7 +89,7 @@ jobs:
           context: ./ui
           platforms: linux/amd64,linux/arm64/v8,linux/arm/v7
           push: true
-          tags: ${{ env.DOCKERHUB_APACHE_REPO }}/ui:${{ env.MVN_VERSION }}
+          tags: ${{ secrets.DOCKERHUB_APACHE_REPO }}/ui:${{ env.MVN_VERSION }}
 
       - name: Build and Push Docker Image extensions-all-jvm
         uses: docker/build-push-action@v6
@@ -97,7 +97,7 @@ jobs:
           context: ./streampipes-extensions/streampipes-extensions-all-jvm
           platforms: linux/amd64,linux/arm64/v8,linux/arm/v7
           push: true
-          tags: ${{ env.DOCKERHUB_APACHE_REPO }}/extensions-all-jvm:${{ env.MVN_VERSION }}
+          tags: ${{ secrets.DOCKERHUB_APACHE_REPO }}/extensions-all-jvm:${{ env.MVN_VERSION }}
 
 #      - name: Build and Push Docker Image pipeline-elements-experimental-flink
 #        uses: docker/build-push-action@v6
@@ -105,7 +105,7 @@ jobs:
 #          context: ./streampipes-extensions/streampipes-pipeline-elements-experimental-flink
 #          platforms: linux/amd64,linux/arm64/v8,linux/arm/v7
 #          push: true
-#          tags: ${{ env.DOCKERHUB_APACHE_REPO }}/pipeline-elements-experimental-flink:${{ env.MVN_VERSION }}
+#          tags: ${{ secrets.DOCKERHUB_APACHE_REPO }}/pipeline-elements-experimental-flink:${{ env.MVN_VERSION }}
 
       - name: Build and Push Docker Image extensions-all-iiot
         uses: docker/build-push-action@v6
@@ -113,7 +113,7 @@ jobs:
           context: ./streampipes-extensions/streampipes-extensions-all-iiot
           platforms: linux/amd64,linux/arm64/v8,linux/arm/v7
           push: true
-          tags: ${{ env.DOCKERHUB_APACHE_REPO }}/extensions-all-iiot:${{ env.MVN_VERSION }}
+          tags: ${{ secrets.DOCKERHUB_APACHE_REPO }}/extensions-all-iiot:${{ env.MVN_VERSION }}
 
       - name: Build and Push Docker Image extensions-iiot-minimal
         uses: docker/build-push-action@v6
@@ -121,5 +121,5 @@ jobs:
           context: ./streampipes-extensions/streampipes-extensions-iiot-minimal
           platforms: linux/amd64,linux/arm64/v8,linux/arm/v7
           push: true
-          tags: ${{ env.DOCKERHUB_APACHE_REPO }}/extensions-iiot-minimal:${{ env.MVN_VERSION }}
+          tags: ${{ secrets.DOCKERHUB_APACHE_REPO }}/extensions-iiot-minimal:${{ env.MVN_VERSION }}
 
