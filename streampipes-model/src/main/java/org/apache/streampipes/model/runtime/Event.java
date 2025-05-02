@@ -18,7 +18,6 @@
 package org.apache.streampipes.model.runtime;
 
 import org.apache.streampipes.commons.exceptions.SpRuntimeException;
-import org.apache.streampipes.extensions.management.connect.adapter.parser.ProtobufParser;
 import org.apache.streampipes.model.constants.PropertySelectorConstants;
 import org.apache.streampipes.model.runtime.field.AbstractField;
 import org.apache.streampipes.model.runtime.field.PrimitiveField;
