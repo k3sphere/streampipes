@@ -162,9 +162,9 @@ public class ProtobufParser implements IParser {
     }else if ( value instanceof ByteString) {
       ByteBuffer buffer = ((ByteString)value).asReadOnlyByteBuffer();
       buffer.order(ByteOrder.BIG_ENDIAN); // Or BIG_ENDIAN depending on C side
-      List<Integer> shorts = new ArrayList<>();
+      List<Short> shorts = new ArrayList<>();
       while(buffer.hasRemaining()) {
-        shorts.add((int)buffer.getShort());
+        shorts.add(buffer.getShort());
       }
       return shorts;
     } else if (value instanceof List) {
