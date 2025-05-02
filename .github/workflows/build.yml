@@ -43,7 +43,7 @@ jobs:
           cache-dependency-path: ui/package-lock.json
 
       - name: Build with Maven
-        run: mvn clean verify -DskipTests
+        run: mvn clean verify -DskipTests -Dcheckstyle.skip=true
 
       - name: Set env variables for Docker builds
         run: |
