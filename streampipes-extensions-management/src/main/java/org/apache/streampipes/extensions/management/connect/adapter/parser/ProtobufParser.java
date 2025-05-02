@@ -17,6 +17,14 @@
  */
 package org.apache.streampipes.extensions.management.connect.adapter.parser;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Base64;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.streampipes.commons.exceptions.connect.ParseException;
 import org.apache.streampipes.extensions.api.connect.IParser;
 import org.apache.streampipes.extensions.api.connect.IParserEventHandler;
@@ -26,6 +34,8 @@ import org.apache.streampipes.model.staticproperty.StaticProperty;
 import org.apache.streampipes.sdk.builder.adapter.ParserDescriptionBuilder;
 import org.apache.streampipes.sdk.extractor.StaticPropertyExtractor;
 import org.apache.streampipes.sdk.helpers.Labels;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.DescriptorProtos;
 import com.google.protobuf.Descriptors;
@@ -33,16 +43,9 @@ import com.google.protobuf.Descriptors.DescriptorValidationException;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.DynamicMessage;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Base64;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 
 public class ProtobufParser implements IParser {
+  private static Logger logger = LoggerFactory.getLogger(ProtobufParser.class);
   public static final String ID = "org.apache.streampipes.extensions.management.connect.adapter.parser.protobuf";
   public static final String LABEL = "Protobuf";
   public static final String DESCRIPTION = "Can be used to read protobuf records";
@@ -53,6 +56,7 @@ public class ProtobufParser implements IParser {
   private Descriptors.Descriptor descriptor = null;
 
   public ProtobufParser() {
+    logger.info("init protobuf parser");
     parserUtils = new ParserUtils();
   }
 
@@ -101,9 +105,10 @@ public class ProtobufParser implements IParser {
   public IParser fromDescription(List<StaticProperty> configuration) {
     var extractor = StaticPropertyExtractor.from(configuration);
     String schema = extractor.codeblockValue(SCHEMA);
-    String mesasgeType = extractor.textParameter(MESSAGE_TYPE);
+    String messageType = extractor.textParameter(MESSAGE_TYPE);
+    logger.info("create protobuf parser from description {} {}",messageType, schema);
     try {
-      return new ProtobufParser(schema, mesasgeType);
+      return new ProtobufParser(schema, messageType);
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -111,6 +116,7 @@ public class ProtobufParser implements IParser {
   }
 
   private Map<String, Object> getRecord(InputStream inputStream) throws ParseException {
+    logger.info("ger record for input");
     try (InputStream base64DecodedStream = Base64.getDecoder().wrap(inputStream)) {
       DynamicMessage msg = DynamicMessage.parseFrom(descriptor, base64DecodedStream);
       return toMap(msg.getAllFields());
@@ -129,7 +135,7 @@ public class ProtobufParser implements IParser {
         resultMap.put(field.getKey().getJsonName(), field.getValue());
       }
     }
-
+    logger.info("to map result {}",resultMap);
     return resultMap;
   }
 
