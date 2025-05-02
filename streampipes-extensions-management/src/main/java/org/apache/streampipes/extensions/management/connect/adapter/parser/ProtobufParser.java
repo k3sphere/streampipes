@@ -153,6 +153,9 @@ public class ProtobufParser implements IParser {
     if (value instanceof Descriptors.EnumValueDescriptor) {
         // Convert EnumValueDescriptor to its name
         return ((Descriptors.EnumValueDescriptor) value).getName();
+    }else if ( value instanceof DynamicMessage) {
+        return toMap(((DynamicMessage) value).getAllFields());
+    
     } else if (value instanceof List) {
         // Handle repeated fields (lists)
         return ((List<?>) value).stream()
