@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -159,12 +160,11 @@ public class ProtobufParser implements IParser {
     }else if ( value instanceof DynamicMessage) {
         return toMap(((DynamicMessage) value).getAllFields());
     }else if ( value instanceof ByteString) {
-      int length = ((ByteString)value).size();
       ByteBuffer buffer = ((ByteString)value).asReadOnlyByteBuffer();
       buffer.order(ByteOrder.BIG_ENDIAN); // Or BIG_ENDIAN depending on C side
-      short[] shorts = new short[length / 2];
-      for (int i = 0; i < shorts.length; i++) {
-          shorts[i] = buffer.getShort();
+      List<Integer> shorts = new ArrayList<>();
+      while(buffer.hasRemaining()) {
+        shorts.add((int)buffer.getShort());
       }
       return shorts;
     } else if (value instanceof List) {
