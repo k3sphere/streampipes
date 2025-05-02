@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -123,11 +124,25 @@ public class ProtobufParser implements IParser {
     logger.info("ger record for input");
     try (InputStream base64DecodedStream = Base64.getDecoder().wrap(inputStream)) {
       DynamicMessage msg = DynamicMessage.parseFrom(descriptor, base64DecodedStream);
-      return toMap(msg.getAllFields());
+      Map<String,Object> map = new HashMap<>();
+      toFlatMap(map, msg.getAllFields());
+      return map;
     } catch (IOException e) {
       e.printStackTrace();
       throw new ParseException("Error decoding the protobuf message. Please check the schema.");
     }
+  }
+  
+  private Map<String, Object> toFlatMap(Map<String,Object> resultMap, Map<FieldDescriptor, Object> map) {
+    for (Map.Entry<FieldDescriptor, Object> field : map.entrySet()) {
+        if (field.getKey().isMapField()) {
+            resultMap.put(field.getKey().getJsonName(), toFlatMap(resultMap, (Map<FieldDescriptor, Object>) field.getValue()));
+        } else {
+            addProtobufValue(resultMap, field.getKey().getJsonName(), field.getValue());
+        }
+    }
+    logger.info("to map result {}", resultMap);
+    return resultMap;
   }
 
   private Map<String, Object> toMap(Map<FieldDescriptor, Object> map) {
@@ -178,6 +193,38 @@ public class ProtobufParser implements IParser {
     } else {
         // Return the value as-is for other types
         return value;
+    }
+  }
+  
+  private void addProtobufValue(Map<String,Object> resultMap, String key, Object value) {
+    if (value == null) {
+        return;
+    }
+
+    if (value instanceof Descriptors.EnumValueDescriptor) {
+        // Convert EnumValueDescriptor to its name
+      resultMap.put(key,((Descriptors.EnumValueDescriptor) value).getName());
+    }else if ( value instanceof DynamicMessage) {
+        toFlatMap(resultMap,((DynamicMessage) value).getAllFields());
+    }else if ( value instanceof ByteString) {
+      ByteBuffer buffer = ((ByteString)value).asReadOnlyByteBuffer();
+      buffer.order(ByteOrder.LITTLE_ENDIAN); // Or BIG_ENDIAN depending on C side
+      List<Short> shorts = new ArrayList<>();
+      while(buffer.hasRemaining()) {
+        shorts.add(buffer.getShort());
+      }
+      resultMap.put(key,shorts);
+    } else if (value instanceof List) {
+        // Handle repeated fields (lists)
+      resultMap.put(key, ((List<?>) value).stream()
+                .map(this::convertProtobufValue) // Recursively convert list items
+                .toList());
+    } else if (value instanceof Map) {
+        // Handle nested maps
+      toFlatMap(resultMap,(Map<FieldDescriptor, Object>) value);
+    } else {
+        // Return the value as-is for other types
+      resultMap.put(key,value);
     }
   }
 
