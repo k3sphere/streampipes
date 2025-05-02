@@ -18,10 +18,13 @@
 package org.apache.streampipes.model.runtime;
 
 import org.apache.streampipes.commons.exceptions.SpRuntimeException;
+import org.apache.streampipes.extensions.management.connect.adapter.parser.ProtobufParser;
 import org.apache.streampipes.model.constants.PropertySelectorConstants;
 import org.apache.streampipes.model.runtime.field.AbstractField;
 import org.apache.streampipes.model.runtime.field.PrimitiveField;
 import org.apache.streampipes.model.schema.EventSchema;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.List;
@@ -29,7 +32,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public class Event {
-
+  private static Logger logger = LoggerFactory.getLogger(Event.class);
   private final Map<String, AbstractField> fieldMap;
   private SourceInfo sourceInfo;
   private SchemaInfo schemaInfo;
@@ -104,6 +107,7 @@ public class Event {
 
   private Map<String, AbstractField> getNestedItem(String fieldSelector, Map<String,
       AbstractField> currentFieldMap) {
+    logger.info("getNestedItem {} {}",fieldSelector,currentFieldMap);
     String key = currentFieldMap.keySet().stream().filter(fieldSelector::startsWith)
         .findFirst().orElseThrow(() -> new IllegalArgumentException("Key not found"));
     return currentFieldMap.get(key).getAsComposite().getRawValue();
