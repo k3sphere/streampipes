@@ -106,7 +106,7 @@ public class ProtobufParser implements IParser {
     var extractor = StaticPropertyExtractor.from(configuration);
     String schema = extractor.codeblockValue(SCHEMA);
     String messageType = extractor.textParameter(MESSAGE_TYPE);
-    logger.info("create protobuf parser from description {} {}",messageType, schema);
+    logger.info("create protobuf parser from description {} {}", messageType, schema);
     try {
       return new ProtobufParser(schema, messageType);
     } catch (Exception e) {
@@ -132,10 +132,13 @@ public class ProtobufParser implements IParser {
       if (field.getKey().isMapField()) {
         resultMap.put(field.getKey().getJsonName(), toMap((Map<FieldDescriptor, Object>) field.getValue()));
       } else {
+        if( field.getValue() != null) {
+          logger.info("field: {} {} {}",field.getKey().getJsonName(), field.getValue(), field.getValue().getClass().toString());
+        }
         resultMap.put(field.getKey().getJsonName(), field.getValue());
       }
     }
-    logger.info("to map result {}",resultMap);
+    logger.info("to map result {}", resultMap);
     return resultMap;
   }
 
