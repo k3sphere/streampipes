@@ -20,6 +20,8 @@ package org.apache.streampipes.extensions.management.connect.adapter.parser;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -37,6 +39,7 @@ import org.apache.streampipes.sdk.helpers.Labels;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.protobuf.ByteString;
 import com.google.protobuf.DescriptorProtos;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Descriptors.DescriptorValidationException;
@@ -155,7 +158,15 @@ public class ProtobufParser implements IParser {
         return ((Descriptors.EnumValueDescriptor) value).getName();
     }else if ( value instanceof DynamicMessage) {
         return toMap(((DynamicMessage) value).getAllFields());
-    
+    }else if ( value instanceof ByteString) {
+      int length = ((ByteString)value).size();
+      ByteBuffer buffer = ((ByteString)value).asReadOnlyByteBuffer();
+      buffer.order(ByteOrder.BIG_ENDIAN); // Or BIG_ENDIAN depending on C side
+      short[] shorts = new short[length / 2];
+      for (int i = 0; i < shorts.length; i++) {
+          shorts[i] = buffer.getShort();
+      }
+      return shorts;
     } else if (value instanceof List) {
         // Handle repeated fields (lists)
         return ((List<?>) value).stream()
