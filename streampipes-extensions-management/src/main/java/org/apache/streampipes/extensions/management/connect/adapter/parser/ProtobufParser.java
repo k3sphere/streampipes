@@ -129,17 +129,42 @@ public class ProtobufParser implements IParser {
   private Map<String, Object> toMap(Map<FieldDescriptor, Object> map) {
     Map<String, Object> resultMap = new LinkedHashMap<>();
     for (Map.Entry<FieldDescriptor, Object> field : map.entrySet()) {
-      if (field.getKey().isMapField()) {
-        resultMap.put(field.getKey().getJsonName(), toMap((Map<FieldDescriptor, Object>) field.getValue()));
-      } else {
-        if( field.getValue() != null) {
-          logger.info("field: {} {} {}",field.getKey().getJsonName(), field.getValue(), field.getValue().getClass().toString());
+        if (field.getKey().isMapField()) {
+            resultMap.put(field.getKey().getJsonName(), toMap((Map<FieldDescriptor, Object>) field.getValue()));
+        } else {
+            Object value = convertProtobufValue(field.getValue());
+            if( value != null) {
+              if( field.getValue() != null) {
+                logger.info("field: {} {} {}",field.getKey().getJsonName(), field.getValue(), field.getValue().getClass().toString());
+              }
+            }
+            resultMap.put(field.getKey().getJsonName(), value);
         }
-        resultMap.put(field.getKey().getJsonName(), field.getValue());
-      }
     }
     logger.info("to map result {}", resultMap);
     return resultMap;
+  }
+
+  private Object convertProtobufValue(Object value) {
+    if (value == null) {
+        return null;
+    }
+
+    if (value instanceof Descriptors.EnumValueDescriptor) {
+        // Convert EnumValueDescriptor to its name
+        return ((Descriptors.EnumValueDescriptor) value).getName();
+    } else if (value instanceof List) {
+        // Handle repeated fields (lists)
+        return ((List<?>) value).stream()
+                .map(this::convertProtobufValue) // Recursively convert list items
+                .toList();
+    } else if (value instanceof Map) {
+        // Handle nested maps
+        return toMap((Map<FieldDescriptor, Object>) value);
+    } else {
+        // Return the value as-is for other types
+        return value;
+    }
   }
 
 }
