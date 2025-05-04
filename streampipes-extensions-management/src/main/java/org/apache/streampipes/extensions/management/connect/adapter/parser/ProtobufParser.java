@@ -176,9 +176,10 @@ public class ProtobufParser implements IParser {
         return toMap(((DynamicMessage) value).getAllFields());
     }else if ( value instanceof ByteString) {
       ByteBuffer buffer = ((ByteString)value).asReadOnlyByteBuffer();
-      List<Byte> shorts = new ArrayList<>();
+      buffer.order(ByteOrder.LITTLE_ENDIAN); // Or BIG_ENDIAN depending on C side
+      List<Short> shorts = new ArrayList<>();
       while(buffer.hasRemaining()) {
-        shorts.add(buffer.get());
+        shorts.add(buffer.getShort());
       }
       return shorts;
     } else if (value instanceof List) {
