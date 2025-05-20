@@ -17,6 +17,12 @@
  */
 package org.apache.streampipes.extensions.connectors.mqtt.adapter;
 
+import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.apache.streampipes.commons.exceptions.connect.AdapterException;
 import org.apache.streampipes.extensions.api.connect.IAdapterConfiguration;
 import org.apache.streampipes.extensions.api.connect.IEventCollector;
@@ -28,7 +34,8 @@ import org.apache.streampipes.extensions.api.extractor.IStaticPropertyExtractor;
 import org.apache.streampipes.extensions.connectors.mqtt.shared.MqttConfig;
 import org.apache.streampipes.extensions.connectors.mqtt.shared.MqttConnectUtils;
 import org.apache.streampipes.extensions.connectors.mqtt.shared.MqttConsumer;
-import org.apache.streampipes.extensions.management.connect.adapter.BrokerEventProcessor;
+import org.apache.streampipes.extensions.management.connect.adapter.MqttBrokerEventProcessor;
+import org.apache.streampipes.extensions.management.connect.adapter.model.MqttEvent;
 import org.apache.streampipes.extensions.management.connect.adapter.parser.Parsers;
 import org.apache.streampipes.messaging.InternalEventProcessor;
 import org.apache.streampipes.model.AdapterType;
@@ -36,15 +43,8 @@ import org.apache.streampipes.model.connect.guess.GuessSchema;
 import org.apache.streampipes.model.extensions.ExtensionAssetType;
 import org.apache.streampipes.sdk.builder.adapter.AdapterConfigurationBuilder;
 import org.apache.streampipes.sdk.helpers.Locales;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.ByteArrayInputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class MqttProtocol implements StreamPipesAdapter {
 
@@ -85,7 +85,7 @@ public class MqttProtocol implements StreamPipesAdapter {
     this.applyConfiguration(extractor.getStaticPropertyExtractor());
     this.mqttConsumer = new MqttConsumer(
         this.mqttConfig,
-        new BrokerEventProcessor(extractor.selectedParser(), collector)
+        new MqttBrokerEventProcessor(extractor.selectedParser(), collector)
     );
 
     Thread thread = new Thread(this.mqttConsumer);
@@ -105,7 +105,7 @@ public class MqttProtocol implements StreamPipesAdapter {
       AtomicReference<Throwable> exceptionRef = new AtomicReference<>();
       this.applyConfiguration(extractor.getStaticPropertyExtractor());
       List<byte[]> elements = new ArrayList<>();
-      InternalEventProcessor<byte[]> eventProcessor = elements::add;
+      InternalEventProcessor<MqttEvent> eventProcessor = elements::add;
 
 
       MqttConsumer consumer = new MqttConsumer(this.mqttConfig, eventProcessor);
