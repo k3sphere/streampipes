@@ -17,12 +17,11 @@
  */
 package org.apache.streampipes.extensions.management.connect.adapter.parser;
 
+
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -41,7 +40,6 @@ import org.apache.streampipes.sdk.helpers.Labels;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.protobuf.ByteString;
 import com.google.protobuf.DescriptorProtos;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Descriptors.DescriptorValidationException;
@@ -122,8 +120,8 @@ public class ProtobufParser implements IParser {
 
   private Map<String, Object> getRecord(InputStream inputStream) throws ParseException {
     logger.info("ger record for input");
-    try (InputStream base64DecodedStream = Base64.getDecoder().wrap(inputStream)) {
-      DynamicMessage msg = DynamicMessage.parseFrom(descriptor, base64DecodedStream);
+    try {
+      DynamicMessage msg = DynamicMessage.parseFrom(descriptor, inputStream);
       Map<String,Object> map = new HashMap<>();
       toFlatMap(map, msg.getAllFields());
       return map;
@@ -174,14 +172,6 @@ public class ProtobufParser implements IParser {
         return ((Descriptors.EnumValueDescriptor) value).getName();
     }else if ( value instanceof DynamicMessage) {
         return toMap(((DynamicMessage) value).getAllFields());
-    }else if ( value instanceof ByteString) {
-      ByteBuffer buffer = ((ByteString)value).asReadOnlyByteBuffer();
-      buffer.order(ByteOrder.LITTLE_ENDIAN); // Or BIG_ENDIAN depending on C side
-      List<Short> shorts = new ArrayList<>();
-      while(buffer.hasRemaining()) {
-        shorts.add(buffer.getShort());
-      }
-      return shorts;
     } else if (value instanceof List) {
         // Handle repeated fields (lists)
         return ((List<?>) value).stream()
@@ -206,14 +196,6 @@ public class ProtobufParser implements IParser {
       resultMap.put(key,((Descriptors.EnumValueDescriptor) value).getName());
     }else if ( value instanceof DynamicMessage) {
         toFlatMap(resultMap,((DynamicMessage) value).getAllFields());
-    }else if ( value instanceof ByteString) {
-      ByteBuffer buffer = ((ByteString)value).asReadOnlyByteBuffer();
-      buffer.order(ByteOrder.LITTLE_ENDIAN); // Or BIG_ENDIAN depending on C side
-      List<Short> shorts = new ArrayList<>();
-      while(buffer.hasRemaining()) {
-        shorts.add(buffer.getShort());
-      }
-      resultMap.put(key,shorts);
     } else if (value instanceof List) {
         // Handle repeated fields (lists)
       resultMap.put(key, ((List<?>) value).stream()
