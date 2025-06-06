@@ -18,38 +18,7 @@
 
 package org.apache.streampipes.connect.iiot.adapters.oi4;
 
-import org.apache.streampipes.commons.exceptions.connect.AdapterException;
-import org.apache.streampipes.commons.exceptions.connect.ParseException;
-import org.apache.streampipes.connect.iiot.adapters.oi4.model.DataSetMessage;
-import org.apache.streampipes.connect.iiot.adapters.oi4.model.NetworkMessage;
-import org.apache.streampipes.extensions.api.connect.IAdapterConfiguration;
-import org.apache.streampipes.extensions.api.connect.IEventCollector;
-import org.apache.streampipes.extensions.api.connect.StreamPipesAdapter;
-import org.apache.streampipes.extensions.api.connect.context.IAdapterGuessSchemaContext;
-import org.apache.streampipes.extensions.api.connect.context.IAdapterRuntimeContext;
-import org.apache.streampipes.extensions.api.extractor.IAdapterParameterExtractor;
-import org.apache.streampipes.extensions.api.extractor.IStaticPropertyExtractor;
-import org.apache.streampipes.extensions.connectors.mqtt.shared.MqttConfig;
-import org.apache.streampipes.extensions.connectors.mqtt.shared.MqttConnectUtils;
-import org.apache.streampipes.extensions.connectors.mqtt.shared.MqttConsumer;
-import org.apache.streampipes.extensions.management.connect.adapter.parser.JsonParsers;
-import org.apache.streampipes.extensions.management.connect.adapter.parser.json.JsonObjectParser;
-import org.apache.streampipes.messaging.InternalEventProcessor;
-import org.apache.streampipes.model.AdapterType;
-import org.apache.streampipes.model.connect.guess.GuessSchema;
-import org.apache.streampipes.model.extensions.ExtensionAssetType;
-import org.apache.streampipes.model.schema.EventSchema;
-import org.apache.streampipes.sdk.StaticProperties;
-import org.apache.streampipes.sdk.builder.adapter.AdapterConfigurationBuilder;
-import org.apache.streampipes.sdk.helpers.Alternatives;
-import org.apache.streampipes.sdk.helpers.Labels;
-import org.apache.streampipes.sdk.helpers.Locales;
-import org.apache.streampipes.sdk.utils.Datatypes;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static org.apache.streampipes.sdk.helpers.EpProperties.timestampProperty;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -64,7 +33,39 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import static org.apache.streampipes.sdk.helpers.EpProperties.timestampProperty;
+import org.apache.commons.io.IOUtils;
+import org.apache.streampipes.commons.exceptions.connect.AdapterException;
+import org.apache.streampipes.commons.exceptions.connect.ParseException;
+import org.apache.streampipes.connect.iiot.adapters.oi4.model.DataSetMessage;
+import org.apache.streampipes.connect.iiot.adapters.oi4.model.NetworkMessage;
+import org.apache.streampipes.extensions.api.connect.IAdapterConfiguration;
+import org.apache.streampipes.extensions.api.connect.IEventCollector;
+import org.apache.streampipes.extensions.api.connect.StreamPipesAdapter;
+import org.apache.streampipes.extensions.api.connect.context.IAdapterGuessSchemaContext;
+import org.apache.streampipes.extensions.api.connect.context.IAdapterRuntimeContext;
+import org.apache.streampipes.extensions.api.extractor.IAdapterParameterExtractor;
+import org.apache.streampipes.extensions.api.extractor.IStaticPropertyExtractor;
+import org.apache.streampipes.extensions.connectors.mqtt.shared.MqttConfig;
+import org.apache.streampipes.extensions.connectors.mqtt.shared.MqttConnectUtils;
+import org.apache.streampipes.extensions.connectors.mqtt.shared.MqttConsumer;
+import org.apache.streampipes.extensions.management.connect.adapter.model.MqttEvent;
+import org.apache.streampipes.extensions.management.connect.adapter.parser.JsonParsers;
+import org.apache.streampipes.extensions.management.connect.adapter.parser.json.JsonObjectParser;
+import org.apache.streampipes.messaging.InternalEventProcessor;
+import org.apache.streampipes.model.AdapterType;
+import org.apache.streampipes.model.connect.guess.GuessSchema;
+import org.apache.streampipes.model.extensions.ExtensionAssetType;
+import org.apache.streampipes.model.schema.EventSchema;
+import org.apache.streampipes.sdk.StaticProperties;
+import org.apache.streampipes.sdk.builder.adapter.AdapterConfigurationBuilder;
+import org.apache.streampipes.sdk.helpers.Alternatives;
+import org.apache.streampipes.sdk.helpers.Labels;
+import org.apache.streampipes.sdk.helpers.Locales;
+import org.apache.streampipes.sdk.utils.Datatypes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Adapter to connect to an Open Industry 4.0 (OI4) compatible device.
@@ -162,9 +163,12 @@ public class Oi4Adapter implements StreamPipesAdapter {
     thread.start();
   }
 
-  private InputStream convertByte(byte[] event) {
-    return IOUtils.toInputStream(new String(event), StandardCharsets.UTF_8);
+  private InputStream convertByte(MqttEvent event) {
+    return IOUtils.toInputStream(new String(event.getPayload()), StandardCharsets.UTF_8);
   }
+  private InputStream convertByte(byte[] event) {
+	    return IOUtils.toInputStream(new String(event), StandardCharsets.UTF_8);
+	  }
 
   private void applyConfiguration(IStaticPropertyExtractor extractor) throws AdapterException {
     String selectedAlternativeSensorDescription = extractor.selectedAlternativeInternalId(
@@ -304,7 +308,7 @@ public class Oi4Adapter implements StreamPipesAdapter {
   private MqttConsumer getGuessMqttConsumer(List<byte[]> sampleMessages) {
     // Define a specialized event processor that adds an event to the sampleMessages array
     // only if it meets certain expectations, as verified by extractPayload.
-    InternalEventProcessor<byte[]> eventProcessor = event -> {
+    InternalEventProcessor<MqttEvent> eventProcessor = event -> {
       InputStream in = convertByte(event);
       NetworkMessage networkMessage;
       try {
@@ -316,7 +320,7 @@ public class Oi4Adapter implements StreamPipesAdapter {
       // Attempt to extract payload from the NetworkMessage
       extractPayload(networkMessage);
       // If successful, add the event to the sampleMessages array
-      sampleMessages.add(event);
+      sampleMessages.add(event.getPayload());
     };
     return new MqttConsumer(this.mqttConfig, eventProcessor);
   }

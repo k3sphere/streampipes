@@ -18,6 +18,11 @@
 
 package org.apache.streampipes.connect.iiot.adapters.iolink;
 
+import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.io.IOUtils;
 import org.apache.streampipes.commons.exceptions.connect.AdapterException;
 import org.apache.streampipes.commons.exceptions.connect.ParseException;
 import org.apache.streampipes.connect.iiot.adapters.iolink.sensor.SensorVVB001;
@@ -32,6 +37,7 @@ import org.apache.streampipes.extensions.api.extractor.IStaticPropertyExtractor;
 import org.apache.streampipes.extensions.connectors.mqtt.shared.MqttConfig;
 import org.apache.streampipes.extensions.connectors.mqtt.shared.MqttConnectUtils;
 import org.apache.streampipes.extensions.connectors.mqtt.shared.MqttConsumer;
+import org.apache.streampipes.extensions.management.connect.adapter.model.MqttEvent;
 import org.apache.streampipes.extensions.management.connect.adapter.parser.JsonParsers;
 import org.apache.streampipes.extensions.management.connect.adapter.parser.json.JsonObjectParser;
 import org.apache.streampipes.model.AdapterType;
@@ -41,14 +47,8 @@ import org.apache.streampipes.sdk.builder.adapter.AdapterConfigurationBuilder;
 import org.apache.streampipes.sdk.helpers.Labels;
 import org.apache.streampipes.sdk.helpers.Locales;
 import org.apache.streampipes.sdk.helpers.Options;
-
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.InputStream;
-import java.util.List;
-import java.util.Map;
 
 public class IfmAlMqttAdapter implements StreamPipesAdapter {
 
@@ -216,7 +216,7 @@ public class IfmAlMqttAdapter implements StreamPipesAdapter {
         key);
   }
 
-  private InputStream convertByte(byte[] event) {
-    return IOUtils.toInputStream(new String(event), "UTF-8");
+  private InputStream convertByte(MqttEvent event) {
+    return IOUtils.toInputStream(new String(event.getPayload()), "UTF-8");
   }
 }
