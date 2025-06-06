@@ -18,10 +18,6 @@
 
 package org.apache.streampipes.connect.adapters.netio;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.streampipes.connect.adapters.netio.model.NetioAllPowerOutputs;
 import org.apache.streampipes.connect.adapters.netio.model.NetioPowerOutput;
 import org.apache.streampipes.extensions.api.connect.IAdapterConfiguration;
@@ -33,7 +29,6 @@ import org.apache.streampipes.extensions.api.extractor.IAdapterParameterExtracto
 import org.apache.streampipes.extensions.connectors.mqtt.shared.MqttConfig;
 import org.apache.streampipes.extensions.connectors.mqtt.shared.MqttConnectUtils;
 import org.apache.streampipes.extensions.connectors.mqtt.shared.MqttConsumer;
-import org.apache.streampipes.extensions.management.connect.adapter.model.MqttEvent;
 import org.apache.streampipes.messaging.InternalEventProcessor;
 import org.apache.streampipes.model.AdapterType;
 import org.apache.streampipes.model.connect.guess.GuessSchema;
@@ -42,6 +37,10 @@ import org.apache.streampipes.sdk.builder.adapter.AdapterConfigurationBuilder;
 import org.apache.streampipes.sdk.helpers.Locales;
 
 import com.google.gson.Gson;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class NetioMQTTAdapter implements StreamPipesAdapter {
 
@@ -89,11 +88,11 @@ public class NetioMQTTAdapter implements StreamPipesAdapter {
     return NetioUtils.getNetioSchema();
   }
 
-  private record EventProcessor(IEventCollector collector) implements InternalEventProcessor<MqttEvent> {
+  private record EventProcessor(IEventCollector collector) implements InternalEventProcessor<byte[]> {
 
     @Override
-    public void onEvent(MqttEvent payload) {
-      List<Map<String, Object>> events = parseEvent(payload.getPayload());
+    public void onEvent(byte[] payload) {
+      List<Map<String, Object>> events = parseEvent(payload);
 
       for (Map<String, Object> event : events) {
         collector.collect(event);

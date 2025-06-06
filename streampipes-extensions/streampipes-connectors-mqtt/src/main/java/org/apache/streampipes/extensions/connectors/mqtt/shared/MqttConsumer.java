@@ -17,8 +17,8 @@
  */
 package org.apache.streampipes.extensions.connectors.mqtt.shared;
 
-import org.apache.streampipes.extensions.management.connect.adapter.model.MqttEvent;
 import org.apache.streampipes.messaging.InternalEventProcessor;
+
 import org.fusesource.mqtt.client.BlockingConnection;
 import org.fusesource.mqtt.client.MQTT;
 import org.fusesource.mqtt.client.Message;
@@ -27,7 +27,7 @@ import org.fusesource.mqtt.client.Topic;
 
 public class MqttConsumer implements Runnable {
 
-  private final InternalEventProcessor<MqttEvent> consumer;
+  private final InternalEventProcessor<byte[]> consumer;
   private boolean running;
   private int maxElementsToReceive = -1;
   private int messageCount = 0;
@@ -35,13 +35,13 @@ public class MqttConsumer implements Runnable {
   private final MqttConfig mqttConfig;
 
   public MqttConsumer(MqttConfig mqttConfig,
-                      InternalEventProcessor<MqttEvent> consumer) {
+                      InternalEventProcessor<byte[]> consumer) {
     this.mqttConfig = mqttConfig;
     this.consumer = consumer;
   }
 
   public MqttConsumer(MqttConfig mqttConfig,
-                      InternalEventProcessor<MqttEvent> consumer,
+                      InternalEventProcessor<byte[]> consumer,
                       int maxElementsToReceive) {
     this(mqttConfig, consumer);
     this.maxElementsToReceive = maxElementsToReceive;
@@ -65,9 +65,8 @@ public class MqttConsumer implements Runnable {
 
       while (running && ((maxElementsToReceive == -1) || (this.messageCount <= maxElementsToReceive))) {
         Message message = connection.receive();
-        String topic = message.getTopic();
         byte[] payload = message.getPayload();
-        consumer.onEvent(new MqttEvent(topic,payload));
+        consumer.onEvent(payload);
         message.ack();
         this.messageCount++;
       }
