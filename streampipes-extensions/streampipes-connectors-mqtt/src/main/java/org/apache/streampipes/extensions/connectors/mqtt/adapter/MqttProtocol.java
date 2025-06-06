@@ -104,7 +104,7 @@ public class MqttProtocol implements StreamPipesAdapter {
     try {
       AtomicReference<Throwable> exceptionRef = new AtomicReference<>();
       this.applyConfiguration(extractor.getStaticPropertyExtractor());
-      List<byte[]> elements = new ArrayList<>();
+      List<MqttEvent> elements = new ArrayList<>();
       InternalEventProcessor<MqttEvent> eventProcessor = elements::add;
 
 
@@ -128,7 +128,7 @@ public class MqttProtocol implements StreamPipesAdapter {
         throw new AdapterException(threadException.getMessage(), threadException);
       }
 
-      return extractor.selectedParser().getGuessSchema(new ByteArrayInputStream(elements.get(0)));
+      return extractor.selectedParser().getGuessSchema(new ByteArrayInputStream(elements.get(0).getPayload()));
     } catch (Exception e) {
       throw new AdapterException(e.getMessage(), e);
     }
