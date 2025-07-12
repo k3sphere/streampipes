@@ -77,7 +77,13 @@ public class InfluxDbClient extends SharedInfluxClient {
       throw new SpRuntimeException("event is null");
     }
     Long timestampValue = event.getFieldBySelector(timestampField).getAsPrimitive().getAsLong();
-    Point.Builder p = Point.measurement(measureName).time(timestampValue, TimeUnit.MILLISECONDS);
+    String eventMeasurementName = measureName;
+    if (event.getOptionalFieldByRuntimeName(measureName).isPresent()) {
+      // when the measurement name matches a field name, use it's valaue insteaad
+      eventMeasurementName = event.getFieldByRuntimeName(measureName).getAsPrimitive().getAsString(); 
+    }
+
+    Point.Builder p = Point.measurement(eventMeasurementName).time(timestampValue, TimeUnit.MILLISECONDS);
     for (Map.Entry<String, Object> pair : event.getRaw().entrySet()) {
       if (pair.getValue() instanceof Integer) {
         p.addField(InfluxDbSink.prepareString(pair.getKey()), (Integer) pair.getValue());
