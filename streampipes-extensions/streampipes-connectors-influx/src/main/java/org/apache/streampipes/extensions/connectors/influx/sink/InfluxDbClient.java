@@ -25,12 +25,14 @@ import org.apache.streampipes.extensions.connectors.influx.shared.SharedInfluxCl
 import org.apache.streampipes.model.runtime.Event;
 
 import org.influxdb.dto.Point;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class InfluxDbClient extends SharedInfluxClient {
-
+  private static final Logger LOG = LoggerFactory.getLogger(InfluxDbClient.class);
 
   private final String timestampField;
   private final Integer batchSize;
@@ -78,7 +80,7 @@ public class InfluxDbClient extends SharedInfluxClient {
     }
     // print all fields names of event
     for(Map.Entry<String, Object> entry : event.getRaw().entrySet()) {
-      System.out.println(String.format("Field name: %s, value: %s", entry.getKey(), entry.getValue().toString()));
+      LOG.info("Field name: {}, value: {}", entry.getKey(), entry.getValue());
     }
 
     Long timestampValue = event.getFieldBySelector(timestampField).getAsPrimitive().getAsLong();
