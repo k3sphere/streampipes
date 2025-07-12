@@ -76,6 +76,11 @@ public class InfluxDbClient extends SharedInfluxClient {
     if (event == null) {
       throw new SpRuntimeException("event is null");
     }
+    // print all fields names of event
+    for(Map.Entry<String, Object> entry : event.getRaw().entrySet()) {
+      System.out.println(String.format("Field name: %s, value: %s", entry.getKey(), entry.getValue().toString()));
+    }
+
     Long timestampValue = event.getFieldBySelector(timestampField).getAsPrimitive().getAsLong();
     String eventMeasurementName = measureName;
     if (event.getOptionalFieldByRuntimeName(measureName).isPresent()) {
