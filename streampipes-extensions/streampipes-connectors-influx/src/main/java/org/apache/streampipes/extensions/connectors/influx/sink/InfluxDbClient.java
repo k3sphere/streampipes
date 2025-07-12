@@ -88,8 +88,11 @@ public class InfluxDbClient extends SharedInfluxClient {
     if (event.getOptionalFieldByRuntimeName(measureName).isPresent()) {
       // when the measurement name matches a field name, use it's valaue insteaad
       eventMeasurementName = event.getFieldByRuntimeName(measureName).getAsPrimitive().getAsString(); 
+      LOG.info("found measurement {}", measureName);
+    }else {
+      LOG.info("measurement {} not found in event", measureName);
     }
-
+    LOG.info("Measurement map: {} => {}", measureName, eventMeasurementName);
     Point.Builder p = Point.measurement(eventMeasurementName).time(timestampValue, TimeUnit.MILLISECONDS);
     for (Map.Entry<String, Object> pair : event.getRaw().entrySet()) {
       if (pair.getValue() instanceof Integer) {
